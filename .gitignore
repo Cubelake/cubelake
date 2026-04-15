@@ -1,0 +1,27 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.DS_Store
+
+# Virtual environments
+.venv
+.env
+
+# Ignore IDE and build artifacts
+.idea/
+.zed
+
+# Ignore caches
+.pytest_cache
+.ruff_cache
+
+# Ignore logs and test files
+
+# Ignore AI
+.claude
+
+# Ignore Scripts

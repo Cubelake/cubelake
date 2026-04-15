@@ -10,3 +10,6 @@
 [submodule "ingestion-apple-itunes"]
 	path = ingestion-apple-itunes
 	url = https://github.com/Cubelacke/ingestion-apple-itunes.git
+[submodule "infra"]
+	path = infra
+	url = https://github.com/Cubelacke/infra.git

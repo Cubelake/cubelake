@@ -4,6 +4,7 @@ requires-python = ">=3.13"
 
 [manifest]
 members = [
+    "appstore-core",
     "appstore-dags",
     "cubelacke",
     "ingestion-apple-itunes",
@@ -23,16 +24,23 @@ wheels = [
 ]
 
 [[package]]
+name = "appstore-core"
+version = "0.1.0"
+source = { editable = "appstore-core" }
+
+[[package]]
 name = "appstore-dags"
 version = "0.1.0"
 source = { virtual = "appstore-dags" }
 dependencies = [
+    { name = "appstore-core" },
     { name = "ingestion-apple-itunes" },
     { name = "ingestion-apple-rss" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "appstore-core", editable = "appstore-core" },
     { name = "ingestion-apple-itunes", editable = "ingestion-apple-itunes" },
     { name = "ingestion-apple-rss", editable = "ingestion-apple-rss" },
 ]
@@ -110,18 +118,26 @@ wheels = [
 name = "ingestion-apple-itunes"
 version = "0.1.0"
 source = { editable = "ingestion-apple-itunes" }
+dependencies = [
+    { name = "appstore-core" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "appstore-core", editable = "appstore-core" }]
 
 [[package]]
 name = "ingestion-apple-rss"
 version = "0.1.0"
 source = { editable = "ingestion-apple-rss" }
 dependencies = [
+    { name = "appstore-core" },
     { name = "httpx" },
     { name = "loguru" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "appstore-core", editable = "appstore-core" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "loguru", specifier = ">=0.7.3" },
 ]

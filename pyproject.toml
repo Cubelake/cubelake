@@ -11,4 +11,5 @@ members = [
     "ingestion-apple-rss",
     "ingestion-apple-itunes",
     "appstore-dags",
+    "appstore-core",
 ]
