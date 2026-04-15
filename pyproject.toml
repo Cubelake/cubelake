@@ -10,4 +10,5 @@ dependencies = []
 members = [
     "ingestion-apple-rss",
     "ingestion-apple-itunes",
+    "appstore-dags",
 ]
