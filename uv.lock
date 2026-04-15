@@ -1,0 +1,25 @@
+version = 1
+revision = 3
+requires-python = ">=3.13"
+
+[manifest]
+members = [
+    "cubelacke",
+    "ingestion-apple-itunes",
+    "ingestion-apple-rss",
+]
+
+[[package]]
+name = "cubelacke"
+version = "0.1.0"
+source = { virtual = "." }
+
+[[package]]
+name = "ingestion-apple-itunes"
+version = "0.1.0"
+source = { virtual = "ingestion-apple-itunes" }
+
+[[package]]
+name = "ingestion-apple-rss"
+version = "0.1.0"
+source = { virtual = "ingestion-apple-rss" }
