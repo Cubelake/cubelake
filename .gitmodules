@@ -1,15 +1,15 @@
 [submodule "appstore-dags"]
 	path = appstore-dags
-	url = https://github.com/Cubelacke/appstore-dags.git
+	url = https://github.com/Cubelake/appstore-dags.git
 [submodule "appstore-core"]
 	path = appstore-core
-	url = https://github.com/Cubelacke/appstore-core.git
+	url = https://github.com/Cubelake/appstore-core.git
 [submodule "ingestion-apple-rss"]
 	path = ingestion-apple-rss
-	url = https://github.com/Cubelacke/ingestion-apple-rss.git
+	url = https://github.com/Cubelake/ingestion-apple-rss.git
 [submodule "ingestion-apple-itunes"]
 	path = ingestion-apple-itunes
-	url = https://github.com/Cubelacke/ingestion-apple-itunes.git
+	url = https://github.com/Cubelake/ingestion-apple-itunes.git
 [submodule "infra"]
 	path = infra
-	url = https://github.com/Cubelacke/infra.git
+	url = https://github.com/Cubelake/infra.git
