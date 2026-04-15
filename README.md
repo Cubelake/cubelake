@@ -1,4 +1,4 @@
-# Cubelacke
+# Cubelake
 
 Data engineering platform for collecting, processing, and analyzing App Store data.
 
@@ -25,7 +25,7 @@ The project is organized as a monorepo with the following services:
 
 ```bash
 # Clone with submodules
-git clone --recurse-submodules https://github.com/Cubelacke/cubelacke.git
+git clone --recurse-submodules https://github.com/Cubelake/cubelake.git
 
 # Install dependencies
 uv sync
