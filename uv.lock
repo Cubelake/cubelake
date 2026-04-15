@@ -4,8 +4,8 @@ requires-python = ">=3.13"
 
 [manifest]
 members = [
-    "cubelacke",
     "appstore-dags",
+    "cubelacke",
     "ingestion-apple-itunes",
     "ingestion-apple-rss",
 ]
@@ -26,6 +26,16 @@ wheels = [
 name = "appstore-dags"
 version = "0.1.0"
 source = { virtual = "appstore-dags" }
+dependencies = [
+    { name = "ingestion-apple-itunes" },
+    { name = "ingestion-apple-rss" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ingestion-apple-itunes", editable = "ingestion-apple-itunes" },
+    { name = "ingestion-apple-rss", editable = "ingestion-apple-rss" },
+]
 
 [[package]]
 name = "certifi"
@@ -99,12 +109,12 @@ wheels = [
 [[package]]
 name = "ingestion-apple-itunes"
 version = "0.1.0"
-source = { virtual = "ingestion-apple-itunes" }
+source = { editable = "ingestion-apple-itunes" }
 
 [[package]]
 name = "ingestion-apple-rss"
 version = "0.1.0"
-source = { virtual = "ingestion-apple-rss" }
+source = { editable = "ingestion-apple-rss" }
 dependencies = [
     { name = "httpx" },
     { name = "loguru" },
