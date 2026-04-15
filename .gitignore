@@ -5,23 +5,36 @@ build/
 dist/
 wheels/
 *.egg-info
-.DS_Store
 
 # Virtual environments
 .venv
 .env
+.env.*
 
-# Ignore IDE and build artifacts
+# IDE and editor artifacts
 .idea/
 .zed
+.vscode/
+*.swp
+*.swo
 
-# Ignore caches
+# OS files
+.DS_Store
+Thumbs.db
+
+# Caches
 .pytest_cache
 .ruff_cache
+.mypy_cache
 
-# Ignore logs and test files
+# Logs
+*.log
+logs/
 
-# Ignore AI
+# AI
 .claude
 
-# Ignore Scripts
+# Terraform (if running locally)
+*.tfstate
+*.tfstate.backup
+.terraform/
