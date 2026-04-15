@@ -6,7 +6,7 @@ requires-python = ">=3.13"
 members = [
     "appstore-core",
     "appstore-dags",
-    "cubelacke",
+    "cubelake",
     "ingestion-apple-itunes",
     "ingestion-apple-rss",
 ]
@@ -85,7 +85,7 @@ wheels = [
 ]
 
 [[package]]
-name = "cubelacke"
+name = "cubelake"
 version = "0.1.0"
 source = { virtual = "." }
 
