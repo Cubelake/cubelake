@@ -4,6 +4,9 @@
 [submodule "appstore-core"]
 	path = appstore-core
 	url = https://github.com/Cubelake/appstore-core.git
+[submodule "appstore-transform"]
+	path = appstore-transform
+	url = https://github.com/Cubelake/appstore-transform.git
 [submodule "ingestion-apple-rss"]
 	path = ingestion-apple-rss
 	url = https://github.com/Cubelake/ingestion-apple-rss.git
