@@ -12,4 +12,5 @@ members = [
     "ingestion-apple-itunes",
     "appstore-dags",
     "appstore-core",
+    "appstore-transform",
 ]
