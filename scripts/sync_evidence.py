@@ -25,8 +25,11 @@ if _env_file.exists():
 
 from common.storage.azure_tokens import GoldToken  # noqa: E402
 
-EVIDENCE_DB = (
-    Path(__file__).parent.parent / "evidence-app" / "sources" / "gold" / "gold.duckdb"
+EVIDENCE_DB = Path(
+    os.environ.get(
+        "EVIDENCE_DB",
+        str(Path(__file__).parent.parent / "evidence-app" / "sources" / "gold" / "gold.duckdb"),
+    )
 )
 
 TABLES = {
