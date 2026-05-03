@@ -16,6 +16,3 @@
 [submodule "infra"]
 	path = infra
 	url = https://github.com/Cubelake/infra.git
-[submodule "evidence-app"]
-	path = evidence-app
-	url = https://github.com/Cubelake/evidence-app.git
