@@ -1,0 +1,20 @@
+# One command to start everything:
+#   docker compose up
+#
+# Services:
+#   Airflow  → http://localhost:8080  (user: airflow / airflow)
+#   Evidence → http://localhost:3000
+
+include:
+  - infra/appstore-dags/docker-compose.yml
+
+services:
+  evidence:
+    build:
+      context: .
+      dockerfile: evidence-app/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - infra/appstore-dags/.env
+    restart: on-failure
