@@ -35,62 +35,79 @@ Cubelake implements a **medallion architecture** (bronze → silver → gold) wi
 ## Architecture
 
 ```
-Apple RSS Feeds + iTunes API
-          │
-          ▼
-┌─────────────────────┐
-│    Bronze Layer      │  Raw JSON snapshots partitioned by snapshot_date
-│  ADLS · bronze/      │  Written by Airflow bronze DAGs (daily schedule)
-└──────────┬──────────┘
-           │  Airflow Asset trigger
-           ▼
-┌─────────────────────┐
-│    Silver Layer      │  Normalized Parquet files, cleaned & enriched
-│  ADLS · silver/      │  Produced by dbt-duckdb via Airflow silver DAGs
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│     Gold Layer       │  Business-ready dimensions & fact tables
-│  ADLS · gold/        │  dim_apps · fct_app_rank_history · fct_top_apps
-└─────────────────────┘
+Apple RSS Feeds
+      │ @daily
+      ▼
+[bronze_top_daily]
+      │ BRONZE_APPSTORE_RSS
+      ▼
+[silver_transform_top_daily]
+      │ SILVER_APPSTORE_RSS ──────────────────────────────────────────────┐
+      ▼                                                                    │
+[bronze_itunes_lookup_daily]                                               │
+  reads silver RSS to discover app IDs → fetches iTunes metadata          │
+      │ BRONZE_APPSTORE_ITUNES                                             │
+      ▼                                                                    │
+[silver_transform_itunes_lookup_daily]                                     │
+      │ SILVER_APPSTORE_ITUNES                                             │
+      └──────────────────────────────────┬────────────────────────────────┘
+                                         │ schedule=[SILVER_APPSTORE_RSS,
+                                         │           SILVER_APPSTORE_ITUNES]
+                                         ▼
+                          [silver_transform_appstore_apps_daily]
+                            joins RSS + iTunes for matching snapshot_dates
+                                         │ SILVER_APPSTORE_APPS
+                                         ▼
+                               [gold_transform_daily]
+                                 fct_top_apps + fct_genre_stats
+                                         │ GOLD_APPSTORE_DAILY
+                                         ▼
+                              [gold_transform_dim_apps]
+                                 gold_dim_apps (SCD Type 1)
+                                         │ GOLD_DIM_APPS
+
+[gold_transform_biweekly]  0 4 1,15 * *  →  fct_app_rank_history (incremental)
+[gold_transform_monthly]   0 5 1   * *   →  fct_app_rank_history (full refresh)
 ```
 
 ### DAG Flow
 
-```
-[Bronze DAGs]  daily schedule
-  ├── apple_top_daily      → Apple RSS feeds   → JSON → ADLS bronze/rss/
-  └── apple_lookup_daily   → iTunes lookup API → JSON → ADLS bronze/itunes/
+| DAG | Schedule | Trigger | Emits | dbt selector |
+|-----|----------|---------|-------|--------------|
+| `bronze_top_daily` | `@daily` | — | `BRONZE_APPSTORE_RSS` | — |
+| `silver_transform_top_daily` | asset | `BRONZE_APPSTORE_RSS` | `SILVER_APPSTORE_RSS` | `+silver_top_apps` |
+| `bronze_itunes_lookup_daily` | asset | `SILVER_APPSTORE_RSS` | `BRONZE_APPSTORE_ITUNES` | — |
+| `silver_transform_itunes_lookup_daily` | asset | `BRONZE_APPSTORE_ITUNES` | `SILVER_APPSTORE_ITUNES` | `+silver_itunes_app_details` |
+| `silver_transform_appstore_apps_daily` | asset | `SILVER_APPSTORE_RSS` or `SILVER_APPSTORE_ITUNES`* | `SILVER_APPSTORE_APPS` | `silver_appstore_apps` |
+| `gold_transform_daily` | asset | `SILVER_APPSTORE_APPS` | `GOLD_APPSTORE_DAILY` | `gold_fct_top_apps gold_fct_genre_stats` |
+| `gold_transform_dim_apps` | asset | `GOLD_APPSTORE_DAILY` | `GOLD_DIM_APPS` | `gold_dim_apps` |
+| `gold_transform_biweekly` | `0 4 1,15 * *` | — | `GOLD_FCT_RANK_HISTORY` | `gold_fct_app_rank_history` |
+| `gold_transform_monthly` | `0 5 1 * *` | — | — | `gold_fct_app_rank_history --full-refresh` |
 
-[Silver DAGs]  triggered by bronze asset completion
-  ├── transform_top_daily      → discover snapshots → dbt run → ADLS silver/rss/
-  └── transform_lookup_daily   → discover snapshots → dbt run → ADLS silver/itunes/
+> \* `silver_transform_appstore_apps_daily` is declared with `schedule=[SILVER_APPSTORE_RSS, SILVER_APPSTORE_ITUNES]`, so Airflow triggers it when either asset is updated. The `discover_missing_snapshots` task then computes the **intersection** of dates present in both silver RSS and silver iTunes, so a snapshot is only processed when both sources are ready.
 
-[Gold DAGs]    triggered by silver asset completion
-  └── build_gold               → dbt run → ADLS gold/
-```
+> `bronze_itunes_lookup_daily` triggers on `SILVER_APPSTORE_RSS`, not on the bronze RSS directly. It queries the silver RSS Parquet to discover which app IDs charted that day, then calls the iTunes lookup API for those IDs.
 
-Bronze snapshots use Hive-style partitioning (`snapshot_date=YYYY-MM-DD/`). Silver DAGs use Airflow dynamic task expansion (`.expand()`) to parallelize dbt runs per snapshot with up to 4 concurrent tasks.
+> On the 1st of each month, both `gold_transform_biweekly` and `gold_transform_monthly` run. The biweekly is an incremental append; the monthly is a full recompute of the entire rank history table.
+
+Bronze snapshots use Hive-style partitioning (`snapshot_date=YYYY-MM-DD/`). Silver DAGs use Airflow dynamic task expansion (`.expand()`, up to 4 concurrent tasks) to parallelize dbt runs per unprocessed snapshot.
 
 ### dbt Models
 
 ```
 models/
 ├── staging/
-│   ├── apple_rss/stg_bronze_top_apps.sql         # Unnest + clean RSS JSON
-│   └── apple_itunes/stg_bronze_itunes.sql        # Parse iTunes JSON
-├── intermediate/
-│   └── appstore/int_appstore_apps.sql            # Cross-source enrichment
+│   ├── apple_rss/stg_bronze_top_apps.sql          # Unnest + clean RSS JSON
+│   └── apple_itunes/stg_bronze_itunes.sql         # Parse iTunes JSON
 └── marts/
-    ├── apple_rss/silver_top_apps.sql             # Final top-apps table (Parquet)
-    ├── apple_itunes/silver_itunes_app_details.sql # Final app details (Parquet)
-    ├── appstore/silver_appstore_apps.sql         # Unified app view
+    ├── apple_rss/silver_top_apps.sql              # Top-apps table (Parquet, per snapshot)
+    ├── apple_itunes/silver_itunes_app_details.sql # App metadata (Parquet, per snapshot)
+    ├── appstore/silver_appstore_apps.sql          # RSS + iTunes joined (Parquet, per snapshot)
     └── gold/
-        ├── gold_dim_apps.sql                     # App dimension
-        ├── gold_fct_app_rank_history.sql         # Rank history fact
-        ├── gold_fct_genre_stats.sql              # Genre aggregates
-        └── gold_fct_top_apps.sql                 # Daily top-apps fact
+        ├── gold_fct_top_apps.sql                  # Daily chart positions fact
+        ├── gold_fct_genre_stats.sql               # Daily genre aggregates fact
+        ├── gold_dim_apps.sql                      # App dimension (SCD Type 1, single file)
+        └── gold_fct_app_rank_history.sql          # All-time rank history (full recompute)
 ```
 
 ---
@@ -257,13 +274,13 @@ Bronze DAGs emit Airflow Assets on completion. Silver DAGs declare `schedule=[BR
 
 On every `dbt run`, on-run-start hooks create named DuckDB secrets for each ADLS container:
 
-| Secret | Container |
-|--------|-----------|
-| `bronze_secret` | `bronze/` |
-| `silver_secret` | `silver/` |
-| `silver_rss_secret` | `silver/rss/` |
-| `silver_itunes_secret` | `silver/itunes/` |
-| `gold_secret` | `gold/` |
+| Secret | Scope |
+|--------|-------|
+| `bronze_secret` | `azure://bronze` |
+| `silver_secret` | `azure://silver` |
+| `silver_rss_secret` | `azure://silver/appstore_rss` |
+| `silver_itunes_secret` | `azure://silver/appstore_itunes` |
+| `gold_secret` | `azure://gold` |
 
 ---
 
