@@ -43,13 +43,13 @@ Apple RSS Feeds
       ▼
 [silver_transform_top_daily]
       │ SILVER_APPSTORE_RSS ──────────────────────────────────────────────┐
-      ▼                                                                    │
-[bronze_itunes_lookup_daily]                                               │
+      ▼                                                                   │
+[bronze_itunes_lookup_daily]                                              │
   reads silver RSS to discover app IDs → fetches iTunes metadata          │
-      │ BRONZE_APPSTORE_ITUNES                                             │
-      ▼                                                                    │
-[silver_transform_itunes_lookup_daily]                                     │
-      │ SILVER_APPSTORE_ITUNES                                             │
+      │ BRONZE_APPSTORE_ITUNES                                            │
+      ▼                                                                   │
+[silver_transform_itunes_lookup_daily]                                    │
+      │ SILVER_APPSTORE_ITUNES                                            │
       └──────────────────────────────────┬────────────────────────────────┘
                                          │ schedule=[SILVER_APPSTORE_RSS,
                                          │           SILVER_APPSTORE_ITUNES]
